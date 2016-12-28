@@ -1,5 +1,7 @@
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -30,6 +33,9 @@ public class CompareFiles {
 	//static WebDriver driver;
 	static String username="ashish.sharma6@globallogic.com";
 	static String password="Test@1234";
+	static String originalFile;
+	static String originalFilePath="C:\\Users\\ashish.sharma6\\Desktop\\Test Folder\\Test_ocr.txt";
+	static String ocrConvertedFile="C:\\Users\\ashish.sharma6\\Desktop\\Test Folder\\TextFile_OCR_UsingTIKA.txt";
 	
 	@BeforeSuite
 	public void login()
@@ -43,7 +49,18 @@ public class CompareFiles {
 	}
 	
 	
-	public static void main(String []args) throws FileNotFoundException, org.json.simple.parser.ParseException, InterruptedException{
+	public static void main(String []args) throws org.json.simple.parser.ParseException, InterruptedException, IOException{
+		
+		  //===========================Reading File===============================
+		  
+		  FileInputStream inputStream = new FileInputStream(originalFilePath);
+		  try {
+		      String originalFile = IOUtils.toString(inputStream);
+		      System.out.println("============================================Original File======================"+originalFile);
+		  } finally {
+		      inputStream.close();
+		  }
+		
 		
 		
 		
@@ -52,12 +69,13 @@ public class CompareFiles {
 		  
 		  try {  
 		  
-		   Object obj = parser.parse(new FileReader("C:\\Users\\ashish.sharma6\\Desktop\\Test Folder\\TextFile_OCR_UsingTIKA.txt"));  
+		   Object obj = parser.parse(new FileReader(ocrConvertedFile));  
 		  
 		   JSONObject jsonObject = (JSONObject) obj;  
 		  
 		   text = (String) jsonObject.get("text");  
-		   System.out.println("Text is: "+text);  	
+		   System.out.println("=================================================OCR Extracted File=====================================================");
+		   System.out.println(text);  	
 		   
 		   
 //==============JSON Parser End===========================		   
@@ -68,9 +86,11 @@ public class CompareFiles {
 		   WebDriverWait wait = new WebDriverWait(driver,20);
 		   
 		   
-
-		   driver.findElement(By.id("clip1")).sendKeys(text+"Sharma");
-		   driver.findElement(By.id("clip2")).sendKeys(text+"Ashish");
+		   WebElement textbox1=wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clip1")));
+		   textbox1.sendKeys(text);
+		   
+		   WebElement textbox2=wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clip2")));
+		   textbox2.sendKeys("Ashish");
 		    //driver.findElement(By.xpath(".//*[@id='compareButtonText']/span[2]")).click(); 
 		    WebElement compareButton= wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(".//*[@id='compareButtonText']/span[2]")));
 		    compareButton.click();
@@ -78,9 +98,10 @@ public class CompareFiles {
 		    driver.switchTo().frame("resultsFrame"); 
 		    System.out.println("Location of he Unmatched text is : "+driver.findElement(By.id("numDiffs")).getText());
 		    List<WebElement> keywords=driver.findElements(By.id("colors"));
-		    System.out.println("Umnatched Words in Right Doc : "+driver.findElement(By.xpath(".//*[@id='inspectorRightContent']/span[2]")).getText());
-		    System.out.println("Umnatched Words in Left Doc : "+driver.findElement(By.xpath(".//*[@id='inspectorLeftContent']/span[2]")).getText());
+		    System.out.println("Umnatched Words in OCR Tika File : "+driver.findElement(By.xpath(".//*[@id='inspectorRightContent']/span[2]")).getText());
+		    System.out.println("Umnatched Words in Original File : "+driver.findElement(By.xpath(".//*[@id='inspectorLeftContent']/span[2]")).getText());
 		 
+		    driver.close();
 		    //WebElement rightLine=driver.findElement(By.className("right line"));
 		    //WebElement leftLine=driver.findElement(By.className("left line"));
 		    
@@ -99,6 +120,8 @@ public class CompareFiles {
 		   e.printStackTrace();  
 		  }  
 
+		
+		  
 		BufferedWriter bw = null;
 		FileWriter fw = null;
 		try {
